@@ -341,13 +341,13 @@ data <- data %>%
 # Do the normalization again
 normalized <- data %>%
   ungroup() %>%
-  mutate_if(is.double, funs(./sum(., na.rm = TRUE))) %>%
+  mutate_if(is.double, list(~./sum(., na.rm = TRUE))) %>%
   select(-peptide_id)
 
 # Or you can normalize by peptide 
 # normalized <- data %>% 
 #   group_by(peptide_id) %>% 
-#   mutate_if(is.double, funs(./sum(., na.rm = TRUE))) %>% 
+#   mutate_if(is.double, list(~./sum(., na.rm = TRUE))) %>% 
 #   ungroup() %>% 
 #   select(-peptide_id)
 
