@@ -50,12 +50,15 @@ data <- data %>%
 # So just delete any bad quality samples before you export your data
 # With great power comes great responsibility
 
-# We will filter out peptides that were low abundance or not idenitifed in many samples
+# Filter out peptides that weren't idenitifed in many samples
 # This command calculates the mean value for each peptide and the number of times it wasn't identified
+# You can check which peptides these are by opening the data dataframe and sorting by the Count column
 data <- data %>% 
   mutate(Mean = rowMeans(data[,-1]), 
          Count = rowSums(data == 0))
 
+# We'll filter out any peptides that were at very low abundance, or were present in less than 70% of the samples
+# You can change this filter by modifying the number after "(ncol(data)-4)*"
 data <- data %>% 
   filter(Mean > 1e+6) %>% 
   filter(Count <= (ncol(data)-4)*.3) %>% 
