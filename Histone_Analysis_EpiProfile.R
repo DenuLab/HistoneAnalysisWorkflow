@@ -46,7 +46,6 @@ data$Peptide <- unlist(lapply(data$Peptide, function(x){unlist(str_replace_all(x
 data <- as_tibble(data)
 
 ########################### You can skip the next section if you're only using PIC-Pr labeling ###########################################
-# But you should do Ac-D3 labeling because it's cool
 # Save your basic Ac-D3 dataset
 data_basic <- data
 
@@ -101,8 +100,8 @@ data <- data %>%
 rm(data_multi)
 rm(data_basic)
 
-######################### You can start here again if you're just doing PIC-Pr (boring) #############################################
-######################## Data check to make sure your data is good enough to run with EpiProfile ##################################
+######################### You can start here again if you're just doing PIC-Pr ####################################################
+######################### Data check to make sure your data is good enough to run with EpiProfile #################################
 # Filter out representative mods that should be consistently identified in your samples
 data_check <- data %>% 
   filter(str_detect(Peptide, "H3_18_26_K(18|23)ac|H3_27_40_K27me|H33_27_40_K27me|H3_9_17_K(9|14)ac|H4_4_17_unmod|H3_3_8_unmod|H3_73_83_K79me1"))
@@ -227,11 +226,13 @@ rm(H4)
 
 # Filter out peptides that weren't idenitifed in many samples
 # This command calculates the mean value for each peptide and the number of times it wasn't identified
+# You can check which peptides these are by opening the data dataframe and sorting by the Count column
 data <- data %>% 
   mutate(Mean = rowMeans(data[,-1]), 
          Count = rowSums(data == 0))
 
 # We'll filter out any peptides that were at very low abundance, or were present in less than 70% of the samples
+# You can change this filter by modifying the number after "(ncol(data)-4)*"
 data <- data %>% 
   filter(Mean > 1e+6) %>% 
   filter(Count <= (ncol(data)-4)*.3) %>% 
@@ -309,6 +310,9 @@ stdev <- groups %>%
 # It's important to do this by sample group since you don't want to throw out mods that change between treatments
 CV <- stdev[2:ncol(stdev)]/average[2:ncol(average)]
 CV <- cbind(average[,1], CV)
+# This finds the median CV between all your sample groups
+# If you only have two sample groups, it might make more sense to calculate the mean instead. 
+# You can do this by changing median in the command below to mean
 CV <- CV %>%
   summarise_all(median, na.rm = TRUE)
 # You'll get a warning message here about an argument being not numeric or logical, you can ignore it. 
@@ -321,7 +325,9 @@ colnames(CV) <- c("Peptide", "Median")
 CV <- CV %>% 
   filter(Median > 0.5)
 
-# Filter out those mods in the original dataframe
+# It's best practice to open up the CV dataframe at this point and see which mods will be filtered out
+# If you want to keep certain modifications, you can make the CV filter less stringent to include them, but be aware that your data will be more noisy
+# Filter out noisy mods in the original dataframe
 data <- data %>% 
   filter(!Peptide %in% CV$Peptide)
 rm(CV)
@@ -381,7 +387,7 @@ distance <- dist_check %>%
 # In general, I like to say that a sample with a disimilarity above 0.05 may be an outlier, but this number is arbitrary and will depend on your samples
 # However, it may just be that one set of samples is different from the rest (all your brain samples are different than colon samples, etc)
 # Before you throw something out, it is useful to see if it is more similar to samples of the same tissue, treatment, etc. 
-# You'll need to use an ID that matches all the samples you want to compare
+# You'll need replace ID in the next command with a string that matches all the samples you want to compare
 distance_group <- dist_check %>% 
   mutate(Mean1 = select(dist_check, contains("ID")) %>% 
            rowMeans()) %>% 
@@ -407,7 +413,7 @@ normalized <- normalized %>%
 
 # Now create a column that contains your sample groups again
 # Here, you need to decide if you're going to do a one-way or a two-way anova
-# Use one-way if you're just comparing factors to one control (eg, three cell treatments to untreated), use two-way for everything else
+# Use one-way if you're just comparing factors to one control (eg, three cell treatments to untreated), use two-way for experiments with two factors (eg, three cell lines + drug treatment)
 # You can change the names ("set01", "set02", etc) to whatever you want if you're running a one-way anova
 # If you're running a two-way anova, you'll need to name each sample group by its factors in the format "Factor1_Factor2
 # eg. if you're comparing two cell lines and two treatments, the name would be "Line1_Treatment1", then "Line2_Treatment1", etc.
