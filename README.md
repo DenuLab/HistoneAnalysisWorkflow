@@ -6,3 +6,5 @@ Raw data and example scripts can be found at: doi:10.25345/C5ZQ0F
 EpiProfile 2.0 is freely available for download at: https://github.com/zfyuan/EpiProfile2.0_Family
 
 Skyline is freely available for download at: https://skyline.ms/project/home/software/Skyline/begin.view
+
+If you're new to R, check out the Guide for R beginners before you get started.
